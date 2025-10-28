@@ -34,8 +34,13 @@ GUI) so it can be executed without installing third-party packages.
 - **Heuristic guidance** – an insight engine evaluates documentation coverage,
   README presence, and dependency pinning to highlight next steps directly in
   the analysis report.
-- **Report export** – persist the current analysis as a JSON report (including
-  plugin findings) so you can ingest it into other tooling.
+- **Report lifecycle** – import previously exported JSON reports, export fresh
+  scans, and replay the results without re-running the analyzer.
+- **Neon operations console** – hacker-inspired UI with a searchable command
+  center, live activity console, and context menus for opening items directly
+  in your editor or file manager.
+- **Deep search** – instant filtering across every tab (files, dependencies,
+  packages, plugins) with keyboard-driven neon search.
 
 ## Getting started
 
@@ -48,7 +53,19 @@ GUI) so it can be executed without installing third-party packages.
 3. Select the target directory and click **Scan**. Double-click any row in the
    results to add it to the management queue, including plugin findings surfaced
    in the dedicated **Plugins** tab.
-4. Use **File → Export Report** to save the findings as JSON.
+4. Use **File → Export Report** to save the findings as JSON, or **File → Import
+   Report** to load a previous session.
+
+## Building a standalone executable
+
+The repository includes a PyInstaller helper so you can produce a Windows/Linux
+`.exe` bundle without touching the source tree:
+
+```bash
+python scripts/build_executable.py --name advanced-analyzer --icon "C:/path/to/icon.ico"
+```
+
+The helper mirrors the recommended Windows invocation (`pyinstaller --noconfirm --onefile --windowed --icon ...`) so you get a GUI-friendly executable by default. Drop the `--icon` flag if you do not have a custom icon, or append `--console` if you prefer to keep a terminal window attached. Artifacts are written to `dist/` and the command requires PyInstaller (`pip install pyinstaller`).
 
 ## Documentation
 
@@ -64,7 +81,9 @@ Detailed guides are available in the `docs/` directory:
 
 ```
 advanced_codebase_analyzer/
+├── __init__.py          # Package re-export of main UI helpers
 ├── __main__.py          # Module entry point for `python -m`
+├── app.py               # Executable-friendly entry point wiring
 ├── core/                # Back-end scanning components
 │   ├── analyzer.py      # Orchestrates file, dependency, package, and plugin scans
 │   ├── dependency_inspector.py  # Parses dependency manifests and packages
@@ -78,7 +97,7 @@ advanced_codebase_analyzer/
 │   ├── large_files.py   # Top-N large file detection
 │   └── license_inventory.py  # Enumerate LICENSE and NOTICE artifacts
 └── gui/                 # Tkinter user interface
-    └── main_window.py   # Desktop experience with management workflow
+    └── main_window.py   # Neon desktop experience with management workflow
 ```
 
 The design separates scanning logic from the GUI so the backend can be reused in
