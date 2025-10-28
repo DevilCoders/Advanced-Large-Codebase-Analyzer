@@ -30,7 +30,13 @@ class FileIndexer:
     def iter_paths(self, root: Path) -> Iterator[Tuple[Path, os.stat_result]]:
         """Yield file paths and stat results, breadth first for better UX."""
         queue: Deque[Path] = deque([root])
-        visited: set[Path] = set()
+        visited_paths: set[Path] = {root}
+        visited_real: set[Path] = set()
+        if self.follow_symlinks:
+            try:
+                visited_real.add(root.resolve())
+            except OSError:
+                pass
         while queue:
             current = queue.popleft()
             try:
@@ -41,9 +47,20 @@ class FileIndexer:
                 if entry.is_dir():
                     if entry.is_symlink() and not self.follow_symlinks:
                         continue
-                    if entry not in visited:
-                        visited.add(entry)
-                        queue.append(entry)
+                    if entry in visited_paths:
+                        continue
+                    resolved: Path | None = None
+                    if self.follow_symlinks:
+                        try:
+                            resolved = entry.resolve()
+                        except OSError:
+                            resolved = None
+                        if resolved is not None and resolved in visited_real:
+                            continue
+                    visited_paths.add(entry)
+                    if resolved is not None:
+                        visited_real.add(resolved)
+                    queue.append(entry)
                 elif entry.is_file():
                     try:
                         stat = entry.stat()
